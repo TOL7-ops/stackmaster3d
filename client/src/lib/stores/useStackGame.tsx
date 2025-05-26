@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
 import { calculateTrimming, generateBlockColor } from "../gameLogic";
 import * as THREE from "three";
+import gsap from "gsap";
 
 export type GamePhase = "ready" | "playing" | "ended";
 
@@ -19,6 +20,7 @@ interface GameState {
   direction: "x" | "z";
   speed: number;
   blockSize: [number, number, number];
+  isDropping: boolean;
   
   // Actions
   startGame: () => void;
@@ -41,6 +43,7 @@ export const useStackGame = create<GameState>()(
     direction: "x",
     speed: 3,
     blockSize: INITIAL_BLOCK_SIZE,
+    isDropping: false,
     
     startGame: () => {
       const baseBlock: Block = {
@@ -68,7 +71,7 @@ export const useStackGame = create<GameState>()(
     
     updateCurrentBlock: (delta: number) => {
       const state = get();
-      if (!state.currentBlock || state.gamePhase !== "playing") return;
+      if (!state.currentBlock || state.gamePhase !== "playing" || state.isDropping) return;
       
       const { currentBlock, direction, speed } = state;
       const newPosition: [number, number, number] = [...currentBlock.position];
@@ -95,52 +98,95 @@ export const useStackGame = create<GameState>()(
     
     dropBlock: () => {
       const state = get();
-      if (!state.currentBlock || state.gamePhase !== "playing") return;
+      if (!state.currentBlock || state.gamePhase !== "playing" || state.isDropping) return;
       
       const { blocks, currentBlock, direction, score, speed } = state;
       const lastBlock = blocks[blocks.length - 1];
       
-      // Calculate trimming
-      const trimResult = calculateTrimming(lastBlock, currentBlock, direction);
+      // Set dropping state to prevent further input
+      set({ isDropping: true });
       
-      if (!trimResult) {
-        // Complete miss - game over
-        set({ gamePhase: "ended" });
-        return;
-      }
+      // Calculate target drop position
+      const targetY = blocks.length * 2;
+      const dropPosition: [number, number, number] = [
+        currentBlock.position[0],
+        targetY,
+        currentBlock.position[2]
+      ];
       
-      const { newBlock, newSize } = trimResult;
-      
-      // Check if block is too small
-      if (newSize[0] < MIN_BLOCK_SIZE || newSize[2] < MIN_BLOCK_SIZE) {
-        set({ gamePhase: "ended" });
-        return;
-      }
-      
-      // Add the trimmed block to the stack
-      const newBlocks = [...blocks, newBlock];
-      const newScore = score + (trimResult.perfect ? 10 : 1);
-      
-      // Create next sliding block
-      const nextDirection: "x" | "z" = direction === "x" ? "z" : "x";
-      const nextHeight = newBlocks.length * 2;
-      const nextSpeed = Math.min(speed + 0.1, 8); // Increase speed slightly
-      
-      const nextBlock: Block = {
-        position: nextDirection === "x" 
-          ? [-SLIDE_DISTANCE, nextHeight, newBlock.position[2]]
-          : [newBlock.position[0], nextHeight, -SLIDE_DISTANCE],
-        size: newSize,
-        color: generateBlockColor(newBlocks.length)
+      // Animate the drop with GSAP
+      const tempPosition = { 
+        x: currentBlock.position[0],
+        y: currentBlock.position[1],
+        z: currentBlock.position[2]
       };
       
-      set({
-        blocks: newBlocks,
-        currentBlock: nextBlock,
-        score: newScore,
-        direction: nextDirection,
-        speed: nextSpeed,
-        blockSize: newSize
+      gsap.to(tempPosition, {
+        duration: 0.3,
+        y: targetY,
+        ease: "bounce.out",
+        onUpdate: () => {
+          const state = get();
+          if (state.currentBlock) {
+            set({
+              currentBlock: {
+                ...state.currentBlock,
+                position: [tempPosition.x, tempPosition.y, tempPosition.z]
+              }
+            });
+          }
+        },
+        onComplete: () => {
+          // After drop animation, calculate trimming
+          const state = get();
+          if (!state.currentBlock) return;
+          
+          const trimResult = calculateTrimming(lastBlock, {
+            ...state.currentBlock,
+            position: dropPosition
+          }, direction);
+          
+          if (!trimResult) {
+            // Complete miss - game over
+            set({ gamePhase: "ended", isDropping: false });
+            return;
+          }
+          
+          const { newBlock, newSize } = trimResult;
+          
+          // Check if block is too small
+          if (newSize[0] < MIN_BLOCK_SIZE || newSize[2] < MIN_BLOCK_SIZE) {
+            set({ gamePhase: "ended", isDropping: false });
+            return;
+          }
+          
+          // Add the trimmed block to the stack
+          const newBlocks = [...blocks, newBlock];
+          const newScore = score + (trimResult.perfect ? 10 : 1);
+          
+          // Create next sliding block
+          const nextDirection: "x" | "z" = direction === "x" ? "z" : "x";
+          const nextHeight = newBlocks.length * 2;
+          const nextSpeed = Math.min(speed + 0.1, 8); // Increase speed slightly
+          
+          const nextBlock: Block = {
+            position: nextDirection === "x" 
+              ? [-SLIDE_DISTANCE, nextHeight, newBlock.position[2]]
+              : [newBlock.position[0], nextHeight, -SLIDE_DISTANCE],
+            size: newSize,
+            color: generateBlockColor(newBlocks.length)
+          };
+          
+          set({
+            blocks: newBlocks,
+            currentBlock: nextBlock,
+            score: newScore,
+            direction: nextDirection,
+            speed: nextSpeed,
+            blockSize: newSize,
+            isDropping: false
+          });
+        }
       });
     },
     
@@ -156,7 +202,8 @@ export const useStackGame = create<GameState>()(
         score: 0,
         direction: "x",
         speed: 3,
-        blockSize: INITIAL_BLOCK_SIZE
+        blockSize: INITIAL_BLOCK_SIZE,
+        isDropping: false
       });
     }
   }))

@@ -13,7 +13,7 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="w-full h-screen relative overflow-hidden bg-gradient-to-b from-blue-400 to-blue-600">
+      <div className="w-full h-screen relative overflow-hidden bg-gradient-to-b from-purple-400 via-blue-500 to-indigo-600">
         {/* Game UI Overlay */}
         <GameUI />
         
@@ -31,20 +31,23 @@ function App() {
             powerPreference: "high-performance"
           }}
         >
-          {/* Lighting */}
-          <ambientLight intensity={0.4} />
+          {/* Enhanced Lighting */}
+          <ambientLight intensity={0.3} color="#8B5CF6" />
           <directionalLight
-            position={[10, 10, 5]}
-            intensity={1}
+            position={[10, 15, 5]}
+            intensity={1.2}
+            color="#FFFFFF"
             castShadow
             shadow-mapSize-width={2048}
             shadow-mapSize-height={2048}
             shadow-camera-far={50}
-            shadow-camera-left={-10}
-            shadow-camera-right={10}
-            shadow-camera-top={10}
-            shadow-camera-bottom={-10}
+            shadow-camera-left={-15}
+            shadow-camera-right={15}
+            shadow-camera-top={15}
+            shadow-camera-bottom={-15}
           />
+          <pointLight position={[-5, 10, -5]} intensity={0.5} color="#60A5FA" />
+          <pointLight position={[5, 10, 5]} intensity={0.5} color="#F472B6" />
           
           <Suspense fallback={null}>
             <StackTowerGame />
