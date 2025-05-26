@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
 import { calculateTrimming, generateBlockColor } from "../gameLogic";
+import { useAudio } from "./useAudio";
 import * as THREE from "three";
 import gsap from "gsap";
 
@@ -167,6 +168,25 @@ export const useStackGame = create<GameState>()(
           // Add the trimmed block to the stack
           const newBlocks = [...blocks, newBlock];
           const newScore = score + (trimResult.perfect ? 10 : 1);
+          
+          // Play sound effect for successful drop
+          if (trimResult.perfect) {
+            // Perfect drop - play success sound
+            try {
+              const audio = useAudio.getState();
+              audio.playSuccess();
+            } catch (e) {
+              console.log('Audio not ready yet');
+            }
+          } else {
+            // Regular drop - play hit sound
+            try {
+              const audio = useAudio.getState();
+              audio.playHit();
+            } catch (e) {
+              console.log('Audio not ready yet');
+            }
+          }
           
           // Create next sliding block
           const nextDirection: "x" | "z" = direction === "x" ? "z" : "x";

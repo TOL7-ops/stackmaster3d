@@ -22,12 +22,38 @@ export default function StackTowerGame() {
     loadHighScore
   } = useStackGame();
 
+  const { playHit, playSuccess } = useAudio();
+
   const gameStarted = useRef(false);
 
-  // Load high score and start the game automatically
+  // Load high score and initialize audio
   useEffect(() => {
     // Load high score from localStorage on component mount
     loadHighScore();
+    
+    // Initialize audio files
+    const initAudio = () => {
+      const hitAudio = new Audio('/sounds/hit.mp3');
+      const successAudio = new Audio('/sounds/success.mp3');
+      const backgroundAudio = new Audio('/sounds/background.mp3');
+      
+      hitAudio.volume = 0.7;
+      successAudio.volume = 0.8;
+      backgroundAudio.volume = 0.3;
+      backgroundAudio.loop = true;
+      
+      useAudio.getState().setHitSound(hitAudio);
+      useAudio.getState().setSuccessSound(successAudio);
+      useAudio.getState().setBackgroundMusic(backgroundAudio);
+      
+      // Start background music
+      backgroundAudio.play().catch(() => {
+        // Audio might be blocked by browser policy, will play after user interaction
+        console.log('Background music will start after user interaction');
+      });
+    };
+    
+    initAudio();
     
     if (!gameStarted.current && gamePhase === "ready") {
       startGame();

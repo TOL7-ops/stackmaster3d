@@ -1,9 +1,11 @@
 import { useStackGame } from "../lib/stores/useStackGame";
+import { useAudio } from "../lib/stores/useAudio";
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
 
 export default function GameUI() {
   const { gamePhase, score, highScore, resetGame, isDropping, speed } = useStackGame();
+  const { isMuted, toggleMute } = useAudio();
 
   return (
     <div className="absolute inset-0 pointer-events-none z-10">
@@ -26,6 +28,17 @@ export default function GameUI() {
             </div>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Audio Control - Mobile Friendly */}
+      <div className="absolute top-2 right-2 sm:top-4 sm:right-4 pointer-events-auto">
+        <Button
+          onClick={toggleMute}
+          className="bg-black/80 hover:bg-black/90 text-white border border-white/20 p-2 sm:p-3"
+          size="sm"
+        >
+          {isMuted ? "🔇" : "🔊"}
+        </Button>
       </div>
 
       {/* Instructions */}
