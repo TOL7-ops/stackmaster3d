@@ -3,15 +3,27 @@ import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
 
 export default function GameUI() {
-  const { gamePhase, score, resetGame } = useStackGame();
+  const { gamePhase, score, resetGame, isDropping, speed } = useStackGame();
 
   return (
     <div className="absolute inset-0 pointer-events-none z-10">
       {/* Score Display */}
       <div className="absolute top-4 left-4 pointer-events-auto">
-        <Card className="bg-black/80 text-white border-white/20">
+        <Card className="bg-black/90 text-white border-white/20 backdrop-blur-sm">
           <CardContent className="p-4">
-            <h2 className="text-2xl font-bold">Score: {score}</h2>
+            <h2 className="text-3xl font-bold bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
+              Score: {score}
+            </h2>
+            {score > 0 && (
+              <p className="text-sm text-gray-300 mt-1">
+                Blocks Stacked: {score}
+              </p>
+            )}
+            {gamePhase === "playing" && (
+              <p className="text-xs text-blue-400 mt-1">
+                Speed: {speed.toFixed(1)}x
+              </p>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -34,11 +46,22 @@ export default function GameUI() {
       )}
 
       {/* Game Playing Instructions */}
-      {gamePhase === "playing" && (
+      {gamePhase === "playing" && !isDropping && (
         <div className="absolute bottom-4 left-4 pointer-events-auto">
-          <Card className="bg-black/80 text-white border-white/20">
+          <Card className="bg-black/80 text-white border-white/20 backdrop-blur-sm">
             <CardContent className="p-4">
-              <p className="text-sm">Click or press SPACE to drop the block</p>
+              <p className="text-sm animate-pulse">Click or press SPACE to drop the block</p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Dropping Feedback */}
+      {isDropping && (
+        <div className="absolute bottom-4 left-4 pointer-events-auto">
+          <Card className="bg-green-600/80 text-white border-green-400/20 backdrop-blur-sm">
+            <CardContent className="p-4">
+              <p className="text-sm font-semibold">Dropping...</p>
             </CardContent>
           </Card>
         </div>

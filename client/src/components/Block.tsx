@@ -15,7 +15,13 @@ export default function Block({ position, size, color, castShadow = false, recei
   return (
     <mesh ref={meshRef} position={position} castShadow={castShadow} receiveShadow={receiveShadow}>
       <boxGeometry args={size} />
-      <meshStandardMaterial color={color} />
+      <meshStandardMaterial 
+        color={color}
+        roughness={0.3}
+        metalness={0.1}
+        emissive={color}
+        emissiveIntensity={0.05}
+      />
     </mesh>
   );
 }

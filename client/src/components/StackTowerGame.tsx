@@ -73,10 +73,26 @@ export default function StackTowerGame() {
     <>
       <Camera stackHeight={blocks.length} />
       
-      {/* Ground plane */}
+      {/* Enhanced Ground plane */}
       <mesh receiveShadow position={[0, -0.5, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[20, 20]} />
-        <meshStandardMaterial color="#2a2a2a" />
+        <planeGeometry args={[30, 30]} />
+        <meshStandardMaterial 
+          color="#1a1a2e" 
+          roughness={0.8}
+          metalness={0.1}
+        />
+      </mesh>
+      
+      {/* Circular platform under the stack */}
+      <mesh receiveShadow position={[0, -0.4, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <cylinderGeometry args={[4, 4, 0.2, 32]} />
+        <meshStandardMaterial 
+          color="#3B82F6" 
+          roughness={0.3}
+          metalness={0.7}
+          emissive="#1E40AF"
+          emissiveIntensity={0.1}
+        />
       </mesh>
 
       {/* Render all stacked blocks */}
