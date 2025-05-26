@@ -17,6 +17,7 @@ interface GameState {
   blocks: Block[];
   currentBlock: Block | null;
   score: number;
+  highScore: number;
   direction: "x" | "z";
   speed: number;
   blockSize: [number, number, number];
@@ -28,6 +29,8 @@ interface GameState {
   updateCurrentBlock: (delta: number) => void;
   gameOver: () => void;
   resetGame: () => void;
+  loadHighScore: () => void;
+  saveHighScore: () => void;
 }
 
 const INITIAL_BLOCK_SIZE: [number, number, number] = [3, 2, 3];
@@ -40,6 +43,7 @@ export const useStackGame = create<GameState>()(
     blocks: [],
     currentBlock: null,
     score: 0,
+    highScore: 0,
     direction: "x",
     speed: 3,
     blockSize: INITIAL_BLOCK_SIZE,
@@ -191,10 +195,31 @@ export const useStackGame = create<GameState>()(
     },
     
     gameOver: () => {
+      const state = get();
+      // Save high score if current score is higher
+      if (state.score > state.highScore) {
+        const newHighScore = state.score;
+        set({ highScore: newHighScore });
+        // Save to localStorage
+        localStorage.setItem('stackTowerHighScore', newHighScore.toString());
+      }
       set({ gamePhase: "ended" });
     },
     
+    loadHighScore: () => {
+      // Load high score from localStorage
+      const savedHighScore = localStorage.getItem('stackTowerHighScore');
+      const highScore = savedHighScore ? parseInt(savedHighScore, 10) : 0;
+      set({ highScore });
+    },
+    
+    saveHighScore: () => {
+      const state = get();
+      localStorage.setItem('stackTowerHighScore', state.highScore.toString());
+    },
+    
     resetGame: () => {
+      const state = get();
       set({
         gamePhase: "ready",
         blocks: [],
@@ -204,6 +229,7 @@ export const useStackGame = create<GameState>()(
         speed: 3,
         blockSize: INITIAL_BLOCK_SIZE,
         isDropping: false
+        // Keep the highScore from current state
       });
     }
   }))

@@ -3,6 +3,7 @@ import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { useStackGame } from "../lib/stores/useStackGame";
 import { calculateTrimming, generateBlockColor } from "../lib/gameLogic";
+import { useAudio } from "../lib/stores/useAudio";
 import Block from "./Block";
 import Camera from "./Camera";
 
@@ -17,18 +18,22 @@ export default function StackTowerGame() {
     startGame,
     dropBlock,
     gameOver,
-    resetGame
+    resetGame,
+    loadHighScore
   } = useStackGame();
 
   const gameStarted = useRef(false);
 
-  // Start the game automatically
+  // Load high score and start the game automatically
   useEffect(() => {
+    // Load high score from localStorage on component mount
+    loadHighScore();
+    
     if (!gameStarted.current && gamePhase === "ready") {
       startGame();
       gameStarted.current = true;
     }
-  }, [gamePhase, startGame]);
+  }, [gamePhase, startGame, loadHighScore]);
 
   // Handle keyboard input
   useEffect(() => {
